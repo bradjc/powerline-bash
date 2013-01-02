@@ -176,7 +176,7 @@ class Powerline:
 
         names = cwd.split('/')
         if len(names) > self.maxdepth:
-            names = names[:2] + [u'\u2026'] + names[2 - maxdepth:]
+            names = names[:2] + [u'\u2026'] + names[2 - self.maxdepth:]
 
         if not self.args.cwd_only:
             for n in names[:-1]:
