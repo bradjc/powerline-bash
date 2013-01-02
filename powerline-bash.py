@@ -243,7 +243,7 @@ class Powerline:
         return has_modified_files, has_untracked_files, has_missing_files
 
 
-    def add_hg_segment(powerline, cwd):
+    def add_hg_segment(self, cwd):
         branch = os.popen('hg branch 2> /dev/null').read().rstrip()
         if len(branch) == 0:
             return False
@@ -316,7 +316,7 @@ class Powerline:
 
     def add_svn_segment(self, cwd):
     #    if not os.path.exists(os.path.join(cwd, '.svn')):
-     #       return
+    #ls        return
         '''svn info:
             First column: Says if item was added, deleted, or otherwise changed
             ' ' no modifications
@@ -334,11 +334,18 @@ class Powerline:
         #TODO: Color segment based on above status codes
         try:
             #cmd = '"svn status | grep -c "^[ACDIMRX\\!\\~]"'
+            p0 = subprocess.Popen(['svn', 'info'], stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE)
+            output = p0.communicate()[0]
+            if p0.returncode != 0:
+                return False
             p1 = subprocess.Popen(['svn', 'status'], stdout=subprocess.PIPE,
                     stderr=subprocess.PIPE)
             p2 = subprocess.Popen(['grep', '-c', '^[ACDIMR\\!\\~]'],
                     stdin=p1.stdout, stdout=subprocess.PIPE)
             output = p2.communicate()[0].strip()
+            if not output:
+                return False
             if len(output) > 0 and int(output) > 0:
                 changes = output.strip()
                 self.append(Segment(' %s ' % changes, seg_types.SVN_CHANGES))
