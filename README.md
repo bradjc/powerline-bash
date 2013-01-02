@@ -28,6 +28,7 @@ shown along with '⇡' or '⇣' indicating whether a git push or pull is pending
 *  If you're too deep into a directory tree, shortens the displayed path with an ellipsis
 *  Shows the current Python [virtualenv](http://www.virtualenv.org/) environment
 *  It's all done in a Python script, so you could go nuts with it
+*  Colors are configurable
 
 Setup
 -----
