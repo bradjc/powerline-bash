@@ -6,6 +6,7 @@ import subprocess
 import sys
 import re
 import argparse
+import json
 
 
 def warn(msg):
@@ -39,91 +40,47 @@ symbols = {
 class Color:
     # The following link is a pretty good resources for color values:
     # http://www.calmar.ws/vim/color-output.png
-    """
-    PATH_BG = 237  # dark grey
-    PATH_FG = 250  # light grey
-    CWD_FG = 254  # nearly-white grey
-    SEPARATOR_FG = 244
 
-    REPO_CLEAN_BG = 148  # a light green color
-    REPO_CLEAN_FG = 0  # black
-    REPO_DIRTY_BG = 161  # pink/red
-    REPO_DIRTY_FG = 15  # white
-
-    CMD_PASSED_BG = 236
-    CMD_PASSED_FG = 15
-    CMD_FAILED_BG = 161
-    CMD_FAILED_FG = 15
-
-    SVN_CHANGES_BG = 148
-    SVN_CHANGES_FG = 22  # dark green
-
-    VIRTUAL_ENV_BG = 35  # a mid-tone green
-    VIRTUAL_ENV_FG = 22
-
-    colors = {
-        seg_types.PATH: (250, 237),
-        seg_types.CWD: (254, 237),
-        seg_types.BRANCH_CLEAN: (0, 148),
-        seg_types.BRANCH_DIRTY: (15, 161),
-        seg_types.CMD_PASSED: (15, 236),
-        seg_types.CMD_FAILED: (15, 161),
-        seg_types.SVN_CHANGES: (22, 148),
-        seg_types.VIRT_ENV: (35, 22),
-    }
-    """
-    """
-    BG = 15
-
-    PATH_BG = BG  # dark grey
-    PATH_FG = 237  # light grey
-    CWD_FG = 234  # nearly-white grey
-    SEPARATOR_FG = 16
-
-    REPO_CLEAN_BG = 254  # a light green color
-    REPO_CLEAN_FG = 26  # black
-    REPO_DIRTY_BG = 254  # pink/red
-    REPO_DIRTY_FG = 161  # white
-
-    CMD_PASSED_BG = BG
-    CMD_PASSED_FG = 16
-    CMD_FAILED_BG = BG
-    CMD_FAILED_FG = 9
-
-    SVN_CHANGES_BG = BG
-    SVN_CHANGES_FG = 22  # dark green
-
-    VIRTUAL_ENV_BG = BG  # a mid-tone green
-    VIRTUAL_ENV_FG = 35
-
-    colors = {
-        seg_types.PATH: (237, 15),
-        seg_types.CWD: (16, 15),
-        seg_types.BRANCH_CLEAN: (26, 254),
-        seg_types.BRANCH_DIRTY: (161, 254),
-        seg_types.CMD_PASSED: (16, 15),
-        seg_types.CMD_FAILED: (9, 15),
-        seg_types.SVN_CHANGES: (22, 254),
-        seg_types.VIRT_ENV: (35, 15),
-    }
-"""
     colors = {
         'segments': {
-            'path':         (237, 254),
-            'cwd':          (16, 254),
-            'branch_clean': (26, 15),
-            'branch_dirty': (161, 15),
-            'cmd_passed':   (16, 254),
-            'cmd_failed':   (9, 254),
-            'svn_changes':  (26, 15),
-            'virtual_env':  (35, 254),
+            'path':         [250, 237],
+            'cwd':          [254, 237],
+            'branch_clean': [0, 148],
+            'branch_dirty': [15, 161],
+            'cmd_passed':   [15, 236],
+            'cmd_failed':   [15, 161],
+            'svn_changes':  [22, 148],
+            'virtual_env':  [35, 22],
         },
         'other': {
-            'separator': 240,
+            'separator': 244,
         }
     }
     def __init__ (self):
-        pass
+        
+        try:
+            with open(os.path.expanduser("~") + '/.powerline-bash', 'r') as f:
+                a = json.load(f)
+        except ValueError:
+            warn('Could not parse config file.')
+            return
+        except:
+            return
+
+
+        # merge the config file settings in with the defaults
+        for i in self.colors.iterkeys():
+            if i not in a:
+                continue
+            for j in self.colors[i].iterkeys():
+                if j not in a[i]:
+                    continue
+                if type(self.colors[i][j]) != type(a[i][j]):
+                    continue
+                if type(self.colors[i][j]) is list and \
+                    len(self.colors[i][j]) != len(a[i][j]):
+                    continue
+                self.colors[i][j] = a[i][j]
 
     def get (self, seg_type):
         return self.colors['segments'][seg_type]
