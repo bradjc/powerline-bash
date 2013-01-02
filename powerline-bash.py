@@ -295,7 +295,7 @@ class Powerline:
             branch += ' +'
 
         seg_type = seg_types.BRANCH_DIRTY if has_pend_com \
-              else seq_types.BRANCH_CLEAN
+              else seg_types.BRANCH_CLEAN
 
         self.append(Segment(' %s ' % branch, seg_type))
         return True
