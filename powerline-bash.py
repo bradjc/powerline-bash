@@ -56,10 +56,11 @@ class Color:
             'separator': 244,
         }
     }
-    def __init__ (self):
+    def __init__ (self, config):
         
         try:
-            with open(os.path.expanduser("~") + '/.powerline-bash', 'r') as f:
+            config_filename = config or os.path.expanduser("~") + '/.powerline-bash'
+            with open(config_filename, 'r') as f:
                 a = json.load(f)
         except ValueError:
             warn('Could not parse config file.')
@@ -105,7 +106,7 @@ class Powerline:
     def __init__(self, args):
         self.segments = []
         self.args = args
-        self.color = Color()
+        self.color = Color(config=args.config)
 
     def colorStr(self, prefix, code):
         return self.LSQESCRSQ % ('[%s;5;%sm' % (prefix, code))
@@ -363,6 +364,7 @@ if __name__ == '__main__':
     arg_parser.add_argument('--cwd-only', action='store_true')
     arg_parser.add_argument('--mode', action='store', default='patched', choices=['patched', 'compatible'])
     arg_parser.add_argument('prev_error', nargs='?', default=0)
+    arg_parser.add_argument('--config', action='store')
     args = arg_parser.parse_args()
 
     p = Powerline(args=args)
