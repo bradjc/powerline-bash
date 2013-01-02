@@ -12,12 +12,17 @@ def warn(msg):
     print '[powerline-bash] ', msg
 
 
-def enum(*sequential, **named):
-    enums = dict(zip(sequential, range(len(sequential))), **named)
+def enum(**enums):
     return type('Enum', (), enums)
 
-seg_types = enum('PATH', 'CWD', 'BRANCH_CLEAN', 'BRANCH_DIRTY', 'CMD_PASSED',
-                 'CMD_FAILED', 'SVN_CHANGES', 'VIRT_ENV')
+seg_types = enum(PATH='path',
+                 CWD='cwd',
+                 BRANCH_CLEAN='branch_clean',
+                 BRANCH_DIRTY='branch_dirty',
+                 CMD_PASSED='cmd_passed',
+                 CMD_FAILED='cmd_failed',
+                 SVN_CHANGES='svn_changes',
+                 VIRT_ENV='virtual_env')
 
 
 symbols = {
@@ -102,25 +107,29 @@ class Color:
         seg_types.VIRT_ENV: (35, 15),
     }
 """
-    SEPARATOR_FG = 240
     colors = {
-        seg_types.PATH: (237, 254),
-        seg_types.CWD: (16, 254),
-        seg_types.BRANCH_CLEAN: (26, 15),
-        seg_types.BRANCH_DIRTY: (161, 15),
-        seg_types.CMD_PASSED: (16, 254),
-        seg_types.CMD_FAILED: (9, 254),
-        seg_types.SVN_CHANGES: (22, 15),
-        seg_types.VIRT_ENV: (35, 254),
+        'segments': {
+            'path':         (237, 254),
+            'cwd':          (16, 254),
+            'branch_clean': (26, 15),
+            'branch_dirty': (161, 15),
+            'cmd_passed':   (16, 254),
+            'cmd_failed':   (9, 254),
+            'svn_changes':  (26, 15),
+            'virtual_env':  (35, 254),
+        },
+        'other': {
+            'separator': 240,
+        }
     }
     def __init__ (self):
         pass
 
     def get (self, seg_type):
-        return self.colors[seg_type]
+        return self.colors['segments'][seg_type]
 
     def getSeparator (self):
-        return self.SEPARATOR_FG
+        return self.colors['other']['separator']
 
 
 class Segment:
@@ -237,14 +246,10 @@ class Powerline:
         branch = os.popen('hg branch 2> /dev/null').read().rstrip()
         if len(branch) == 0:
             return False
-  #      bg = Color.REPO_CLEAN_BG
-  #      fg = Color.REPO_CLEAN_FG
         seg_type = seg_types.BRANCH_CLEAN
         has_mod_files, has_untr_files, has_missing_files = self.get_hg_status()
         if has_mod_files or has_untr_files or has_missing_files:
             seg_type = seg_types.BRANCH_DIRTY
-  #          bg = Color.REPO_DIRTY_BG
-  #          fg = Color.REPO_DIRTY_FG
             extra = ''
             if has_untr_files:
                 extra += '+'
