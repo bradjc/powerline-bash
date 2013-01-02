@@ -103,10 +103,12 @@ class Powerline:
     reset     = LSQESCRSQ % '[0m'
     bold      = LSQESCRSQ % '[1m'
 
-    def __init__(self, args):
+    def __init__(self, args, cwd):
         self.segments = []
-        self.args = args
-        self.color = Color(config=args.config)
+        self.args     = args
+        self.color    = Color(config=args.config)
+        self.cwd      = cwd
+        self.maxdepth = 5
 
     def colorStr(self, prefix, code):
         return self.LSQESCRSQ % ('[%s;5;%sm' % (prefix, code))
@@ -160,10 +162,10 @@ class Powerline:
         return (out + self.reset).encode('utf-8')
             
 
-    def add_cwd_segment(self, cwd, maxdepth, cwd_only=False):
+    def add_cwd_segment(self):
         #powerline.append(' \\w ', 15, 237)
         home = os.getenv('HOME')
-        cwd = cwd or os.getenv('PWD')
+        cwd = self.cwd or os.getenv('PWD')
         cwd = cwd.decode('utf-8')
 
         if cwd.find(home) == 0:
@@ -173,10 +175,10 @@ class Powerline:
             cwd = cwd[1:]
 
         names = cwd.split('/')
-        if len(names) > maxdepth:
+        if len(names) > self.maxdepth:
             names = names[:2] + [u'\u2026'] + names[2 - maxdepth:]
 
-        if not cwd_only:
+        if not self.args.cwd_only:
             for n in names[:-1]:
                 self.append(Segment(' %s ' % n, seg_types.PATH))
         self.append(Segment(' %s ' % names[-1], seg_types.CWD, True))
@@ -200,7 +202,7 @@ class Powerline:
         return has_modified_files, has_untracked_files, has_missing_files
 
 
-    def add_hg_segment(self, cwd):
+    def add_hg_segment(self):
         branch = os.popen('hg branch 2> /dev/null').read().rstrip()
         if len(branch) == 0:
             return False
@@ -241,7 +243,7 @@ class Powerline:
         return has_pending_commits, has_untracked_files, origin_position
 
 
-    def add_git_segment(self, cwd):
+    def add_git_segment(self):
         #cmd = "git branch 2> /dev/null | grep -e '\\*'"
         p1 = subprocess.Popen(['git', 'branch'], stdout=subprocess.PIPE,
             stderr=subprocess.PIPE)
@@ -264,7 +266,7 @@ class Powerline:
         return True
 
 
-    def add_svn_segment(self, cwd):
+    def add_svn_segment(self):
     #    if not os.path.exists(os.path.join(cwd, '.svn')):
     #ls        return
         '''svn info:
@@ -306,10 +308,10 @@ class Powerline:
         return True
 
 
-    def add_repo_segment(self, cwd):
+    def add_repo_segment(self):
         for add_repo_segment in (self.add_git_segment, self.add_svn_segment, self.add_hg_segment):
             try:
-                if add_repo_segment(cwd):
+                if add_repo_segment():
                     return
             except subprocess.CalledProcessError:
                 pass
@@ -317,7 +319,7 @@ class Powerline:
                 pass
 
 
-    def add_virtual_env_segment(self, cwd):
+    def add_virtual_env_segment(self):
         env = os.getenv("VIRTUAL_ENV")
         if env is None:
             return False
@@ -327,9 +329,9 @@ class Powerline:
         return True
 
 
-    def add_root_indicator(self, error):
+    def add_root_indicator(self):
         seg_type = seg_types.CMD_PASSED
-        if int(error) != 0:
+        if int(self.args.prev_error) != 0:
             seg_type = seg_types.CMD_FAILED
         self.append(Segment(' \\$ ', seg_type))
 
@@ -361,17 +363,28 @@ def get_valid_cwd():
 
 if __name__ == '__main__':
     arg_parser = argparse.ArgumentParser()
-    arg_parser.add_argument('--cwd-only', action='store_true')
-    arg_parser.add_argument('--mode', action='store', default='patched', choices=['patched', 'compatible'])
-    arg_parser.add_argument('prev_error', nargs='?', default=0)
-    arg_parser.add_argument('--config', action='store')
+    arg_parser.add_argument('--cwd-only',
+                            action='store_true',
+                            help='display only the current directory and none of the path.')
+    arg_parser.add_argument('--mode',
+                            action='store',
+                            default='patched',
+                            choices=['patched', 'compatible'],
+                            help='in compatible mode characters in non patched fonts will be used')
+    arg_parser.add_argument('prev_error',
+                            nargs='?',
+                            default=0, 
+                            help='return code of the previous command')
+    arg_parser.add_argument('--config',
+                            action='store',
+                            help='path to color configuration file',
+                            metavar='config_file')
     args = arg_parser.parse_args()
 
-    p = Powerline(args=args)
-    cwd = get_valid_cwd()
-    p.add_virtual_env_segment(cwd)
-    p.add_cwd_segment(cwd, 5, args.cwd_only)
-    p.add_repo_segment(cwd)
-    p.add_root_indicator(args.prev_error)
+    p = Powerline(args=args, cwd=get_valid_cwd())
+    p.add_virtual_env_segment()
+    p.add_cwd_segment()
+    p.add_repo_segment()
+    p.add_root_indicator()
     sys.stdout.write(p.draw())
 
