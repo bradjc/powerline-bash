@@ -48,3 +48,52 @@ See https://github.com/Lokaltog/vim-powerline/wiki/Patched-fonts
         }
 
         export PROMPT_COMMAND="_update_ps1"
+        
+Options
+-------
+~~~~~
+usage: powerline-bash.py [-h] [--cwd-only] [--mode {patched,compatible}]
+                         [--config config_file]
+                         [prev_error]
+
+positional arguments:
+  prev_error            return code of the previous command
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --cwd-only            display only the current directory and none of the
+                        path.
+  --mode {patched,compatible}
+                        in compatible mode characters in non patched fonts
+                        will be used
+  --config config_file  path to color configuration file
+~~~~~~
+
+
+Color Configuration
+-------------------
+
+To use a different color scheme, create a `.powerline-bash` file in your home directory.
+This is a json file, specified like so:
+
+~~~~~
+{
+    "segments": {
+        "path":         [16, 254],
+        "cwd":          [16, 254],
+        "branch_clean": [26, 15],
+        "branch_dirty": [161, 15],
+        "cmd_passed":   [16, 254],
+        "cmd_failed":   [9, 254],
+        "svn_changes":  [26, 15],
+        "virtual_env":  [35, 254]
+    },
+    "other": {
+        "separator": 240
+    }
+}
+~~~~~
+
+The first number in the list is the foreground color and the second is the background.
+The color numbers are from this page: http://www.calmar.ws/vim/color-output.png
+
