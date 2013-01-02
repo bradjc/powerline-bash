@@ -123,8 +123,6 @@ class Color:
         return self.SEPARATOR_FG
 
 
-
-
 class Segment:
     def __init__ (self, content, seg_type, bold=False):
         self.content = content
@@ -139,8 +137,6 @@ class Powerline:
     bold      = LSQESCRSQ % '[1m'
 
     def __init__(self, args):
-    #    self.separator = Powerline.symbols[mode]['separator']
-    #    self.separator_thin = Powerline.symbols[mode]['separator_thin']
         self.segments = []
         self.args = args
         self.color = Color()
@@ -180,10 +176,6 @@ class Powerline:
                 if bg == nbg:
                     sep = symbols[self.args.mode]['separator_thin']
                     sfg = self.color.getSeparator()
-         #   else:
-         #       sep = symbols[self.args.mode]['separator_thin']
-          #      sbg = 15
-
 
             bold_start = self.bold if s.bold else ''
             bold_end   = self.reset if s.bold else ''
@@ -200,8 +192,6 @@ class Powerline:
 
         return (out + self.reset).encode('utf-8')
             
-
-
 
     def add_cwd_segment(self, cwd, maxdepth, cwd_only=False):
         #powerline.append(' \\w ', 15, 237)
@@ -250,13 +240,13 @@ class Powerline:
   #      bg = Color.REPO_CLEAN_BG
   #      fg = Color.REPO_CLEAN_FG
         seg_type = seg_types.BRANCH_CLEAN
-        has_modified_files, has_untracked_files, has_missing_files = self.get_hg_status()
-        if has_modified_files or has_untracked_files or has_missing_files:
+        has_mod_files, has_untr_files, has_missing_files = self.get_hg_status()
+        if has_mod_files or has_untr_files or has_missing_files:
             seg_type = seg_types.BRANCH_DIRTY
   #          bg = Color.REPO_DIRTY_BG
   #          fg = Color.REPO_DIRTY_FG
             extra = ''
-            if has_untracked_files:
+            if has_untr_files:
                 extra += '+'
             if has_missing_files:
                 extra += '!'
@@ -290,25 +280,22 @@ class Powerline:
 
     def add_git_segment(self, cwd):
         #cmd = "git branch 2> /dev/null | grep -e '\\*'"
-        p1 = subprocess.Popen(['git', 'branch'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        p2 = subprocess.Popen(['grep', '-e', '\\*'], stdin=p1.stdout, stdout=subprocess.PIPE)
+        p1 = subprocess.Popen(['git', 'branch'], stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE)
+        p2 = subprocess.Popen(['grep', '-e', '\\*'], stdin=p1.stdout,
+            stdout=subprocess.PIPE)
         output = p2.communicate()[0].strip()
         if not output:
             return False
 
         branch = output.rstrip()[2:]
-        has_pending_commits, has_untracked_files, origin_position = self.get_git_status()
-        branch += origin_position
-        if has_untracked_files:
+        has_pend_com, has_untr, origin_pos = self.get_git_status()
+        branch += origin_pos
+        if has_untr:
             branch += ' +'
 
-#        bg = Color.REPO_CLEAN_BG
- #       fg = Color.REPO_CLEAN_FG
-        seg_type = seg_types.BRANCH_CLEAN
-        if has_pending_commits:
-            seg_type = seg_types.BRANCH_DIRTY
-   #         bg = Color.REPO_DIRTY_BG
-    #        fg = Color.REPO_DIRTY_FG
+        seg_type = seg_types.BRANCH_DIRTY if has_pend_com \
+              else seq_types.BRANCH_CLEAN
 
         self.append(Segment(' %s ' % branch, seg_type))
         return True
@@ -373,20 +360,14 @@ class Powerline:
             return False
 
         env_name = os.path.basename(env)
-    #    bg = Color.VIRTUAL_ENV_BG
-     #   fg = Color.VIRTUAL_ENV_FG
         self.append(Segment(' %s ' % env_name, seg_types.VIRT_ENV))
         return True
 
 
     def add_root_indicator(self, error):
-   #     bg = Color.CMD_PASSED_BG
-   #     fg = Color.CMD_PASSED_FG
         seg_type = seg_types.CMD_PASSED
         if int(error) != 0:
             seg_type = seg_types.CMD_FAILED
-   #         fg = Color.CMD_FAILED_FG
-   #         bg = Color.CMD_FAILED_BG
         self.append(Segment(' \\$ ', seg_type))
 
 
@@ -414,6 +395,7 @@ def get_valid_cwd():
         warn("Your current directory is invalid. Lowest valid directory: " + up)
     return cwd
 
+
 if __name__ == '__main__':
     arg_parser = argparse.ArgumentParser()
     arg_parser.add_argument('--cwd-only', action='store_true')
@@ -423,12 +405,9 @@ if __name__ == '__main__':
 
     p = Powerline(args=args)
     cwd = get_valid_cwd()
-#    add_virtual_env_segment(p, cwd)
-    #p.append(Segment(powerline, ' \\u ', 250, 240))
-    #p.append(Segment(powerline, ' \\h ', 250, 238))
+    p.add_virtual_env_segment(cwd)
     p.add_cwd_segment(cwd, 5, args.cwd_only)
     p.add_repo_segment(cwd)
     p.add_root_indicator(args.prev_error)
     sys.stdout.write(p.draw())
 
-# vim: set expandtab:
