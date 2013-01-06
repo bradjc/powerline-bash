@@ -23,7 +23,8 @@ seg_types = enum(PATH='path',
                  CMD_PASSED='cmd_passed',
                  CMD_FAILED='cmd_failed',
                  SVN_CHANGES='svn_changes',
-                 VIRT_ENV='virtual_env')
+                 VIRT_ENV='virtual_env',
+                 HOSTNAME='hostname')
 
 
 symbols = {
@@ -51,6 +52,7 @@ class Color:
             'cmd_failed':   [15, 161],
             'svn_changes':  [22, 148],
             'virtual_env':  [35, 22],
+            'hostname':     [32, 255],
         },
         'other': {
             'separator': 244,
@@ -340,7 +342,7 @@ class Powerline:
         if len(host) > 8:
             host = host[0:6] + '...'
 
-        self.append(Segment(' %s ' % host, seg_types.BRANCH_CLEAN))
+        self.append(Segment(' %s ' % host, seg_types.HOSTNAME))
 
 
     def add_root_indicator(self):
