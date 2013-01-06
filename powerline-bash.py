@@ -334,8 +334,13 @@ class Powerline:
         return True
 
 
- #   def add_host (self):
+    def add_host (self):
+        host = 'fightingapple'
 
+        if len(host) > 8:
+            host = host[0:6] + '...'
+
+        self.append(Segment(' %s ' % host, seg_types.BRANCH_CLEAN))
 
 
     def add_root_indicator(self):
@@ -394,6 +399,7 @@ if __name__ == '__main__':
     args = arg_parser.parse_args()
 
     p = Powerline(args=args, cwd=get_valid_cwd())
+    p.add_host()
     p.add_virtual_env_segment()
     p.add_cwd_segment()
     p.add_repo_segment()
