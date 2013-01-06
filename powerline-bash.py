@@ -59,7 +59,8 @@ class Color:
     def __init__ (self, config):
         
         try:
-            config_filename = config or os.path.expanduser("~") + '/.powerline-bash'
+            config_filename = config or os.path.expanduser("~") + \
+                              '/.powerline-bash'
             with open(config_filename, 'r') as f:
                 a = json.load(f)
         except ValueError:
@@ -267,8 +268,6 @@ class Powerline:
 
 
     def add_svn_segment(self):
-    #    if not os.path.exists(os.path.join(cwd, '.svn')):
-    #ls        return
         '''svn info:
             First column: Says if item was added, deleted, or otherwise changed
             ' ' no modifications
@@ -281,7 +280,7 @@ class Powerline:
             'X' an unversioned directory created by an externals definition
             '?' item is not under version control
             '!' item is missing (removed by non-svn command) or incomplete
-             '~' versioned item obstructed by some item of a different kind
+            '~' versioned item obstructed by some item of a different kind
         '''
         #TODO: Color segment based on above status codes
         try:
@@ -309,7 +308,9 @@ class Powerline:
 
 
     def add_repo_segment(self):
-        for add_repo_segment in (self.add_git_segment, self.add_svn_segment, self.add_hg_segment):
+        for add_repo_segment in (self.add_git_segment,
+                                 self.add_svn_segment,
+                                 self.add_hg_segment):
             try:
                 if add_repo_segment():
                     return
@@ -365,12 +366,15 @@ if __name__ == '__main__':
     arg_parser = argparse.ArgumentParser()
     arg_parser.add_argument('--cwd-only',
                             action='store_true',
-                            help='display only the current directory and none of the path.')
+                            help='display only the current directory and none \
+                                  of the path.')
     arg_parser.add_argument('--mode',
                             action='store',
                             default='patched',
                             choices=['patched', 'compatible'],
-                            help='in compatible mode characters in non patched fonts will be used')
+                            help='in compatible mode characters in non patched \
+                                  fonts will be used. Use this if you do not \
+                                  have a patched font for your terminal.')
     arg_parser.add_argument('prev_error',
                             nargs='?',
                             default=0, 
