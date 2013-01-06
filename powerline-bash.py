@@ -12,7 +12,6 @@ import json
 def warn(msg):
     print '[powerline-bash] ', msg
 
-
 def enum(**enums):
     return type('Enum', (), enums)
 
@@ -25,7 +24,6 @@ seg_types = enum(PATH='path',
                  SVN_CHANGES='svn_changes',
                  VIRT_ENV='virtual_env',
                  HOSTNAME='hostname')
-
 
 symbols = {
     'compatible': {
@@ -46,13 +44,13 @@ class Color:
         'segments': {
             'path':         [250, 237],
             'cwd':          [254, 237],
-            'branch_clean': [0, 148],
+            'branch_clean': [0,  148],
             'branch_dirty': [15, 161],
             'cmd_passed':   [15, 236],
             'cmd_failed':   [15, 161],
             'svn_changes':  [22, 148],
             'virtual_env':  [35, 22],
-            'hostname':     [32, 255],
+            'hostname':     [0, 38],
         },
         'other': {
             'separator': 244,
@@ -336,7 +334,7 @@ class Powerline:
         return True
 
 
-    def add_host (self):
+    def add_hostname_segment (self):
         host = 'fightingapple'
 
         if len(host) > 8:
@@ -401,7 +399,7 @@ if __name__ == '__main__':
     args = arg_parser.parse_args()
 
     p = Powerline(args=args, cwd=get_valid_cwd())
-    p.add_host()
+    p.add_hostname_segment()
     p.add_virtual_env_segment()
     p.add_cwd_segment()
     p.add_repo_segment()
