@@ -179,6 +179,10 @@ class Powerline:
         if len(names) > self.maxdepth:
             names = names[:2] + [u'\u2026'] + names[2 - self.maxdepth:]
 
+        if len(names) == 1 and names[0] == '':
+            # If we are in the root directory display just the /
+            names[0] = '/'
+
         if not self.args.cwd_only:
             for n in names[:-1]:
                 self.append(Segment(' %s ' % n, seg_types.PATH))
@@ -328,6 +332,10 @@ class Powerline:
         env_name = os.path.basename(env)
         self.append(Segment(' %s ' % env_name, seg_types.VIRT_ENV))
         return True
+
+
+ #   def add_host (self):
+
 
 
     def add_root_indicator(self):
