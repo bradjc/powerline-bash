@@ -180,7 +180,7 @@ class Powerline:
 
         names = cwd.split('/')
         if len(names) > self.maxdepth:
-            names = names[:2] + symbols[self.args.mode]['ellipsis'] + \
+            names = names[:2] + [symbols[self.args.mode]['ellipsis']] + \
                     names[2 - self.maxdepth:]
 
         if len(names) == 1 and names[0] == '':
