@@ -402,11 +402,14 @@ if __name__ == '__main__':
                             metavar='config_file')
     args = arg_parser.parse_args()
 
-    p = Powerline(args=args, cwd=get_valid_cwd())
-    p.add_hostname_segment()
-    p.add_virtual_env_segment()
-    p.add_cwd_segment()
-    p.add_repo_segment()
-    p.add_root_indicator()
-    sys.stdout.write(p.draw())
+    try:
+        p = Powerline(args=args, cwd=get_valid_cwd())
+        p.add_hostname_segment()
+        p.add_virtual_env_segment()
+        p.add_cwd_segment()
+        p.add_repo_segment()
+        p.add_root_indicator()
+        sys.stdout.write(p.draw())
+    except KeyboardInterrupt, SystemExit:
+        pass
 
