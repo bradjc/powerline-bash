@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import os
+import socket
 import subprocess
 import sys
 import re
@@ -338,7 +339,7 @@ class Powerline:
 
 
     def add_hostname_segment (self):
-        host = 'fightingapple'
+        host = socket.gethostname()
 
         if len(host) > 8:
             host = host[0:8] + symbols[self.args.mode]['ellipsis']
