@@ -28,11 +28,13 @@ seg_types = enum(PATH='path',
 symbols = {
     'compatible': {
         'separator': u'\u25B6',
-        'separator_thin': u'\u276F'
+        'separator_thin': u'\u276F',
+        'ellipsis': u'\u2026',
     },
     'patched': {
         'separator': u'\u2B80',
-        'separator_thin': u'\u2B81'
+        'separator_thin': u'\u2B81',
+        'ellipsis': u'\u2026',
     }
 }
 
@@ -177,7 +179,8 @@ class Powerline:
 
         names = cwd.split('/')
         if len(names) > self.maxdepth:
-            names = names[:2] + [u'\u2026'] + names[2 - self.maxdepth:]
+            names = names[:2] + symbols[self.args.mode]['ellipsis'] + \
+                    names[2 - self.maxdepth:]
 
         if len(names) == 1 and names[0] == '':
             # If we are in the root directory display just the /
@@ -338,7 +341,7 @@ class Powerline:
         host = 'fightingapple'
 
         if len(host) > 8:
-            host = host[0:6] + '...'
+            host = host[0:8] + symbols[self.args.mode]['ellipsis']
 
         self.append(Segment(' %s ' % host, seg_types.HOSTNAME))
 
