@@ -48,7 +48,7 @@ See https://github.com/Lokaltog/vim-powerline/wiki/Patched-fonts
         }
 
         export PROMPT_COMMAND="_update_ps1"
-        
+
 Options
 -------
 ~~~~~
@@ -86,7 +86,8 @@ This is a json file, specified like so:
         "cmd_passed":   [16, 254],
         "cmd_failed":   [9, 254],
         "svn_changes":  [26, 15],
-        "virtual_env":  [35, 254]
+        "virtual_env":  [35, 254],
+        "hostname":     [235, 253]
     },
     "other": {
         "separator": 240

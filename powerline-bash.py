@@ -30,11 +30,15 @@ symbols = {
     'compatible': {
         'separator': u'\u25B6',
         'separator_thin': u'\u276F',
+        'separator_right': u'\u25C0',
+        'separator_right_thin': u'\u276E',
         'ellipsis': u'\u2026',
     },
     'patched': {
         'separator': u'\u2B80',
         'separator_thin': u'\u2B81',
+        'separator_right': u'\u2B82',
+        'separator_right_thin': u'\u2B83',
         'ellipsis': u'\u2026',
     }
 }
@@ -60,7 +64,7 @@ class Color:
         }
     }
     def __init__ (self, config):
-        
+
         try:
             config_filename = config or os.path.expanduser("~") + \
                               '/.powerline-bash'
@@ -100,6 +104,9 @@ class Segment:
         self.type    = seg_type
         self.bold    = bold
 
+    def width (self):
+        return len(self.content) + 1
+
 
 class Powerline:
 
@@ -108,11 +115,14 @@ class Powerline:
     bold      = LSQESCRSQ % '[1m'
 
     def __init__(self, args, cwd):
-        self.segments = []
-        self.args     = args
-        self.color    = Color(config=args.config)
-        self.cwd      = cwd
-        self.maxdepth = 5
+        self.segmentsl = []
+        self.segmentsr = []
+        self.segmentsd = []
+        self.args      = args
+        self.color     = Color(config=args.config)
+        self.cwd       = cwd
+        self.maxdepth  = 5
+        self.width     = int(args.width)
 
     def colorStr(self, prefix, code):
         return self.LSQESCRSQ % ('[%s;5;%sm' % (prefix, code))
@@ -126,12 +136,21 @@ class Powerline:
         return self.colorStr('48', code)
 
     def append(self, segment):
-        self.segments.append(segment)
+        self.segmentsl.append(segment)
+
+    def append_right(self, segment):
+        self.segmentsr.append(segment)
+
+    def append_down(self, segment):
+        self.segmentsd.append(segment)
 
     def draw(self):
+        left_len  = sum(c.width() for c in self.segmentsl)
+        right_len = sum(c.width() for c in self.segmentsr)
+
         out = ''
 
-        segs = self.segments
+        segs = self.segmentsl
         segs.append(None)
         for i, s in zip(range(len(segs)), segs):
             if not s:
@@ -162,9 +181,88 @@ class Powerline:
                 self.bgcolor(sbg),
                 self.fgcolor(sfg),
                 sep))
+        out += self.reset
 
-        return (out + self.reset).encode('utf-8')
-            
+        outr = ''
+
+        segs = self.segmentsr
+        segs.append(None)
+        for i, s in zip(range(len(segs)), segs):
+            if not s:
+                break
+            fg,bg = self.color.get(s.type)
+            sep   = symbols[self.args.mode]['separator_right']
+            sfg   = bg
+            sbg   = -1
+
+            if segs[i+1]:
+
+                nfg,nbg = self.color.get(segs[i+1].type)
+                sbg = nbg
+
+                if bg == nbg:
+                    sep = symbols[self.args.mode]['separator_right_thin']
+                    sfg = self.color.getSeparator()
+
+            bold_start = self.bold if s.bold else ''
+            bold_end   = self.reset if s.bold else ''
+
+            outr = ''.join((
+                self.bgcolor(sbg),
+                self.fgcolor(sfg),
+                sep,
+                self.fgcolor(fg),
+                self.bgcolor(bg),
+                bold_start,
+                s.content,
+                bold_end)) + outr
+        outr += self.reset
+
+        outd = ''
+        segs = self.segmentsd
+        segs.append(None)
+        for i, s in zip(range(len(segs)), segs):
+            if not s:
+                break
+            fg,bg = self.color.get(s.type)
+            sep   = symbols[self.args.mode]['separator']
+            sfg   = bg
+            sbg   = -1
+
+            if segs[i+1]:
+
+                nfg,nbg = self.color.get(segs[i+1].type)
+                sbg = nbg
+
+                if bg == nbg:
+                    sep = symbols[self.args.mode]['separator_thin']
+                    sfg = self.color.getSeparator()
+
+            bold_start = self.bold if s.bold else ''
+            bold_end   = self.reset if s.bold else ''
+
+            outd += ''.join((
+                self.fgcolor(fg),
+                self.bgcolor(bg),
+                bold_start,
+                s.content,
+                bold_end,
+                self.bgcolor(sbg),
+                self.fgcolor(sfg),
+                sep))
+        outd += self.reset
+
+
+    #    print left_len
+    #    print right_len
+        mid_len = self.width - left_len - right_len
+    #    print mid_len
+        mid = ' '*mid_len
+
+
+
+        return (out + mid + outr + '\n' + outd).encode('utf-8')
+
 
     def add_cwd_segment(self):
         #powerline.append(' \\w ', 15, 237)
@@ -225,7 +323,7 @@ class Powerline:
             if has_missing_files:
                 extra += '!'
             branch += (' ' + extra if extra != '' else '')
-        self.append(Segment(' %s ' % branch, seg_type))
+        self.append_right(Segment(' %s ' % branch, seg_type))
         return True
 
 
@@ -271,7 +369,7 @@ class Powerline:
         seg_type = seg_types.BRANCH_DIRTY if has_pend_com \
               else seg_types.BRANCH_CLEAN
 
-        self.append(Segment(' %s ' % branch, seg_type))
+        self.append_right(Segment(' %s ' % branch, seg_type))
         return True
 
 
@@ -307,7 +405,8 @@ class Powerline:
                 return False
             if len(output) > 0 and int(output) > 0:
                 changes = output.strip()
-                self.append(Segment(' %s ' % changes, seg_types.SVN_CHANGES))
+                self.append_right(Segment(' %s ' % changes,
+                                          seg_types.SVN_CHANGES))
         except OSError:
             return False
         except subprocess.CalledProcessError:
@@ -344,14 +443,14 @@ class Powerline:
         if len(host) > 8:
             host = host[0:8] + symbols[self.args.mode]['ellipsis']
 
-        self.append(Segment(' %s ' % host, seg_types.HOSTNAME))
+        self.append_right(Segment(' %s ' % host, seg_types.HOSTNAME))
 
 
     def add_root_indicator(self):
         seg_type = seg_types.CMD_PASSED
         if int(self.args.prev_error) != 0:
             seg_type = seg_types.CMD_FAILED
-        self.append(Segment(' \\$ ', seg_type))
+        self.append_down(Segment(' $ ', seg_type))
 
 
 def get_valid_cwd():
@@ -394,20 +493,26 @@ if __name__ == '__main__':
                                   have a patched font for your terminal.')
     arg_parser.add_argument('prev_error',
                             nargs='?',
-                            default=0, 
+                            default=0,
                             help='return code of the previous command')
     arg_parser.add_argument('--config',
                             action='store',
                             help='path to color configuration file',
                             metavar='config_file')
+    arg_parser.add_argument('--width',
+                            action='store',
+                            help='character width of the terminal',
+                            required=True)
     args = arg_parser.parse_args()
 
     try:
         p = Powerline(args=args, cwd=get_valid_cwd())
-        p.add_hostname_segment()
         p.add_virtual_env_segment()
         p.add_cwd_segment()
+
+        p.add_hostname_segment()
         p.add_repo_segment()
+
         p.add_root_indicator()
         sys.stdout.write(p.draw())
     except KeyboardInterrupt, SystemExit:
