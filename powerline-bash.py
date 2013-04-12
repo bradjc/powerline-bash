@@ -277,7 +277,14 @@ class Powerline:
             cwd = cwd[1:]
 
         names = cwd.split('/')
-        if len(names) > self.maxdepth:
+
+        # Get the total number of characters in the string
+        total_chars = sum(len(x) for x in names)
+        total_chars += (len(names) * 3)
+
+        # Truncate only if width would exceed the width of the terminal minus
+        # a buffer.
+        if float(total_chars) > 0.8 * float(self.width):
             names = names[:2] + [symbols[self.args.mode]['ellipsis']] + \
                     names[2 - self.maxdepth:]
 
