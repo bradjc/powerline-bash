@@ -67,7 +67,7 @@ class Color:
 
         try:
             config_filename = config or os.path.expanduser("~") + \
-                              '/.powerline-bash'
+                              '/.config/powerline-bash'
             with open(config_filename, 'r') as f:
                 a = json.load(f)
         except ValueError:
