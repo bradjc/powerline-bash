@@ -11,7 +11,7 @@ import json
 
 
 def warn(msg):
-    print '[powerline-bash] ', msg
+    print('[powerline-bash] {}'.format(msg))
 
 def enum(**enums):
     return type('Enum', (), enums)
@@ -69,7 +69,7 @@ class Color:
             config_filename = config or os.path.expanduser("~") + \
                               '/.config/powerline-bash'
             with open(config_filename, 'r') as f:
-                a = json.load(f)
+                user_colors = json.load(f)
         except ValueError:
             warn('Could not parse config file.')
             return
@@ -78,18 +78,9 @@ class Color:
 
 
         # merge the config file settings in with the defaults
-        for i in self.colors.iterkeys():
-            if i not in a:
-                continue
-            for j in self.colors[i].iterkeys():
-                if j not in a[i]:
-                    continue
-                if type(self.colors[i][j]) != type(a[i][j]):
-                    continue
-                if type(self.colors[i][j]) is list and \
-                    len(self.colors[i][j]) != len(a[i][j]):
-                    continue
-                self.colors[i][j] = a[i][j]
+        for chr_type,chr_names in user_colors.items():
+            for chr_name,color_range in chr_names.items():
+                self.colors[chr_type][chr_name] = color_range
 
     def get (self, seg_type):
         return self.colors['segments'][seg_type]
@@ -260,15 +251,14 @@ class Powerline:
         mid = ' '*mid_len
 
 
-
-        return (out + mid + outr + '\n' + outd).encode('utf-8')
+        return (out + mid + outr + '\n' + outd)
 
 
     def add_cwd_segment(self):
         #powerline.append(' \\w ', 15, 237)
         home = os.getenv('HOME')
         cwd = self.cwd or os.getenv('PWD')
-        cwd = cwd.decode('utf-8')
+        #cwd = cwd.decode('utf-8')
 
         if cwd.find(home) == 0:
             cwd = cwd.replace(home, '~', 1)
@@ -303,7 +293,7 @@ class Powerline:
         has_untracked_files = False
         has_missing_files = False
         output = subprocess.Popen(['hg', 'status'],
-                stdout=subprocess.PIPE).communicate()[0]
+                stdout=subprocess.PIPE).communicate()[0].decode('utf-8')
         for line in output.split('\n'):
             if line == '':
                 continue
@@ -339,7 +329,7 @@ class Powerline:
         has_untracked_files = False
         origin_position = ""
         output = subprocess.Popen(['git', 'status', '--ignore-submodules'],
-                stdout=subprocess.PIPE).communicate()[0]
+                stdout=subprocess.PIPE).communicate()[0].decode('utf-8')
         for line in output.split('\n'):
             origin_status = re.findall(
                     r"Your branch is (ahead|behind).*?(\d+) comm", line)
@@ -362,8 +352,8 @@ class Powerline:
         p1 = subprocess.Popen(['git', 'branch'], stdout=subprocess.PIPE,
             stderr=subprocess.PIPE)
         p2 = subprocess.Popen(['grep', '-e', '\\*'], stdin=p1.stdout,
-            stdout=subprocess.PIPE)
-        output = p2.communicate()[0].strip()
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        output = p2.communicate()[0].decode('utf-8').strip()
         if not output:
             return False
 
@@ -400,14 +390,14 @@ class Powerline:
             #cmd = '"svn status | grep -c "^[ACDIMRX\\!\\~]"'
             p0 = subprocess.Popen(['svn', 'info'], stdout=subprocess.PIPE,
                     stderr=subprocess.PIPE)
-            output = p0.communicate()[0]
+            output = p0.communicate()[0].decode('utf-8')
             if p0.returncode != 0:
                 return False
             p1 = subprocess.Popen(['svn', 'status'], stdout=subprocess.PIPE,
                     stderr=subprocess.PIPE)
             p2 = subprocess.Popen(['grep', '-c', '^[ACDIMR\\!\\~]'],
                     stdin=p1.stdout, stdout=subprocess.PIPE)
-            output = p2.communicate()[0].strip()
+            output = p2.communicate()[0].decode('utf-8').strip()
             if not output:
                 return False
             if len(output) > 0 and int(output) > 0:
@@ -522,6 +512,8 @@ if __name__ == '__main__':
 
         p.add_root_indicator()
         sys.stdout.write(p.draw())
-    except KeyboardInterrupt, SystemExit:
+    except KeyboardInterrupt:
+        pass
+    except SystemExit:
         pass
 
